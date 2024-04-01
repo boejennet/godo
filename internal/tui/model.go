@@ -5,6 +5,7 @@ import (
 
 	"github.com/boejennet/godo/internal/data"
 	"github.com/boejennet/godo/internal/todos"
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -25,6 +26,7 @@ type TodoModel struct {
 	textInput textinput.Model
 	state     sessionState
 	keys      keyMap
+	help      help.Model
 	cursor    int
 	width     int
 	height    int
@@ -36,6 +38,7 @@ func NewModel(tdb *data.TodoDB, todos []todos.Todo) *TodoModel {
 		todos: todos,
 		state: listTodosView,
 		keys:  keys,
+		help:  help.New(),
 	}
 }
 
@@ -111,9 +114,13 @@ func (m TodoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m TodoModel) View() string {
 	doc := strings.Builder{}
 	if m.state == listTodosView {
-		doc.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, TodoList(m.cursor, m.todos, m.width, m.height)))
+		doc.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, TodoList(m.cursor, m.todos, m.width, m.height-2)))
 	} else if m.state == newTodoView {
 		doc.WriteString(m.textInput.View())
 	}
+
+	helpView := m.help.View(m.keys)
+	doc.WriteString(helpView)
+
 	return doc.String()
 }
