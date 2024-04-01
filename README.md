@@ -19,3 +19,9 @@ Downlaod the source code and run `make install` with go installed.
 `godo update 1 -c` Mark the todo with the ID 1 as complete.
 
 `godo update 1 -n="My new name` Update the name
+
+## Missing features
+- Delete todos
+- Tests
+- Viewport for TUI
+- Projects
