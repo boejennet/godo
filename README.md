@@ -1,6 +1,8 @@
 # Godo Todo App
 A simple todo app with a CLI & TUI.
 
+Written to play around with Cobra, GORM & Bubbletea.
+
 ## Installation
 Downlaod the source code and run `make install` with go installed.
 
