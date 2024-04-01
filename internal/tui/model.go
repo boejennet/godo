@@ -5,6 +5,7 @@ import (
 
 	"github.com/boejennet/godo/internal/data"
 	"github.com/boejennet/godo/internal/todos"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -23,6 +24,7 @@ type TodoModel struct {
 	tdb       *data.TodoDB
 	textInput textinput.Model
 	state     sessionState
+	keys      keyMap
 	cursor    int
 	width     int
 	height    int
@@ -33,6 +35,7 @@ func NewModel(tdb *data.TodoDB, todos []todos.Todo) *TodoModel {
 		tdb:   tdb,
 		todos: todos,
 		state: listTodosView,
+		keys:  keys,
 	}
 }
 
@@ -48,26 +51,20 @@ func (m TodoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 	// Is it a key press?
 	case tea.KeyMsg:
-		switch msg.String() {
-		// These keys should exit the program.
-		case "ctrl+c", "q":
+		switch {
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
-		case "up", "k":
+		case key.Matches(msg, m.keys.Up):
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case "r":
-			// Refresh the list
-			m.todos = m.tdb.GetAllTodos()
-		case "c":
-			// Mark the todo as completed
-			m.todos[m.cursor].Completed = !m.todos[m.cursor].Completed
-			m.tdb.Update(m.todos[m.cursor])
-		case "down", "j":
+		case key.Matches(msg, m.keys.Down):
 			if m.cursor < len(m.todos)-1 {
 				m.cursor++
 			}
-		case "ctrl+n":
+		case key.Matches(msg, m.keys.Refresh):
+			m.todos = m.tdb.GetAllTodos()
+		case key.Matches(msg, m.keys.NewTodo):
 			// Create a new todo
 			if m.state == listTodosView {
 				ti := textinput.New()
@@ -77,6 +74,13 @@ func (m TodoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.textInput = ti
 				m.state = newTodoView
 			}
+		case key.Matches(msg, m.keys.ToggleCompleted):
+			if len(m.todos) > 0 {
+				m.todos[m.cursor].Completed = !m.todos[m.cursor].Completed
+				m.tdb.Update(m.todos[m.cursor])
+			}
+		}
+		switch msg.String() {
 		case "esc":
 			// when in the new todo view, cancel
 			if m.state == newTodoView {
@@ -92,7 +96,6 @@ func (m TodoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = listTodosView
 			}
 			// TODO: when in the list view, edit the selected todo name
-
 		}
 	}
 
